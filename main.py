@@ -1,7 +1,8 @@
 # Example file showing a basic pygame "game loop"
 import pygame
 import random
-from threading import Timer
+from threading import Thread
+import time
 
 # pygame setup
 pygame.init()
@@ -14,12 +15,13 @@ player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
 circles = []
 
+# Adds a circle coordinate every second
 def circle_position():
-	circles.append(pygame.Vector2(random.randint(0, screen.get_width()), random.randint(0, screen.get_height())))
-	add_circles = Timer(1.0, circle_position)
-	add_circles.start()
+	while True:
+		circles.append(pygame.Vector2(random.randint(0, screen.get_width()), random.randint(0, screen.get_height())))
+		time.sleep(1)
 
-add_circles = Timer(1.0, circle_position)
+add_circles = Thread(target=circle_position)
 add_circles.start()
 
 while running:
