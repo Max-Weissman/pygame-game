@@ -19,27 +19,27 @@ class Circle(pygame.sprite.Sprite):
 	def __init__(self, color, width, coord):
 		pygame.sprite.Sprite.__init__(self)
 
-		self.image = pygame.Surface([width, width])
-		self.image.fill(background)
-		self.image.set_colorkey(background)
+		self.image = pygame.Surface([width, width], pygame.SRCALPHA)
 
 		pygame.draw.circle(self.image, color, (width / 2, width / 2), width / 2)
 
 		self.rect = self.image.get_rect()
 		self.rect.x, self.rect.y = coord
+		self.radius = width / 2
 
-sprites = pygame.sprite.Group()
+player = pygame.sprite.Group()
+green_circles = pygame.sprite.Group()
 
 # initialize player circle
-player = Circle("red", 40, player_pos)
-sprites.add(player)
+player_start = Circle("red", 40, player_pos)
+player.add(player_start)
 
 # Adds a green circle every second
 def circle_position():
 	while True:
 		coords = pygame.Vector2(random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))
 		green_circle = Circle("green", 40, coords)
-		sprites.add(green_circle)
+		green_circles.add(green_circle)
 		time.sleep(1)
 
 add_circles = Thread(target=circle_position)
@@ -56,29 +56,40 @@ while running:
 	screen.fill(background)
 
 	# render sprites
-	sprites.update()
-	sprites.draw(screen)
+	player.update()
+	player.draw(screen)
+	green_circles.update()
+	green_circles.draw(screen)
 
-	# arrow keys move circle
 	keys = pygame.key.get_pressed()
-	if keys[pygame.K_w]:
-		player.rect.y -= 300 * dt
-	if keys[pygame.K_s]:
-		player.rect.y += 300 * dt
-	if keys[pygame.K_a]:
-		player.rect.x -= 300 * dt
-	if keys[pygame.K_d]:
-		player.rect.x += 300 * dt
 
-	# loop circle from edges of screen
-	if player.rect.y <= -40:
-		player.rect.y = screen.get_height() + 30
-	if player.rect.y >= 40 + screen.get_height():
-		player.rect.y = -30
-	if player.rect.x <= -40:
-		player.rect.x = screen.get_width() + 30
-	if player.rect.x >= 40 + screen.get_width():
-		player.rect.x = -30
+	for sprite in player.sprites():
+		# arrow keys move circle
+		if keys[pygame.K_w]:
+			sprite.rect.y -= 300 * dt
+		if keys[pygame.K_s]:
+			sprite.rect.y += 300 * dt
+		if keys[pygame.K_a]:
+			sprite.rect.x -= 300 * dt
+		if keys[pygame.K_d]:
+			sprite.rect.x += 300 * dt
+
+		# loop circle from edges of screen
+		if sprite.rect.y <= -40:
+			sprite.rect.y = screen.get_height() + 30
+		if sprite.rect.y >= 40 + screen.get_height():
+			sprite.rect.y = -30
+		if sprite.rect.x <= -40:
+			sprite.rect.x = screen.get_width() + 30
+		if sprite.rect.x >= 40 + screen.get_width():
+			sprite.rect.x = -30
+
+		# check contact with green circles
+		for circle in green_circles.sprites():
+			if pygame.sprite.collide_circle(sprite, circle):
+				player.add(Circle("red", 40, (circle.rect.x, circle.rect.y)))
+				circle.kill()
+				
 
 	# flip() the display to put your work on screen
 	pygame.display.flip()
