@@ -29,21 +29,27 @@ class Circle(pygame.sprite.Sprite):
 
 player = pygame.sprite.Group()
 green_circles = pygame.sprite.Group()
+blue_circles = pygame.sprite.Group()
 
 # initialize player circle
 player_start = Circle("red", 40, player_pos)
 player.add(player_start)
 
-# Adds a green circle every second
-def circle_position():
+# Adds a circle of a color over an interval
+def circle_position(color, interval, group):
 	while True:
 		coords = pygame.Vector2(random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))
-		green_circle = Circle("green", 40, coords)
-		green_circles.add(green_circle)
-		time.sleep(1)
+		circle = Circle(color, 40, coords)
+		group.add(circle)
+		time.sleep(interval)
 
-add_circles = Thread(target=circle_position)
-add_circles.start()
+# Adds a green circle every second
+add_green_circles = Thread(target=circle_position, args=('green', 1, green_circles))
+add_green_circles.start()
+
+# Adds a blue circle every 5 seconds
+add_blue_circles = Thread(target=circle_position, args=('blue', 5, blue_circles))
+add_blue_circles.start()
 
 while running:
 	# poll for events
@@ -60,6 +66,8 @@ while running:
 	player.draw(screen)
 	green_circles.update()
 	green_circles.draw(screen)
+	blue_circles.update()
+	blue_circles.draw(screen)
 
 	keys = pygame.key.get_pressed()
 
@@ -84,11 +92,17 @@ while running:
 		if sprite.rect.x >= 40 + screen.get_width():
 			sprite.rect.x = -30
 
-		# check contact with green circles
+		# check contact with green circles and turn red
 		for circle in green_circles.sprites():
 			if pygame.sprite.collide_circle(sprite, circle):
 				player.add(Circle("red", 40, (circle.rect.x, circle.rect.y)))
 				circle.kill()
+		
+		# check contact with blue circles and turn red circles blue
+		for circle in blue_circles.sprites():
+			if pygame.sprite.collide_circle(sprite, circle):
+				blue_circles.add(Circle("blue", 40, (sprite.rect.x, sprite.rect.y)))
+				sprite.kill()
 				
 
 	# flip() the display to put your work on screen
